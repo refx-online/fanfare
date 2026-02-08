@@ -234,16 +234,3 @@ class Score:
         return num_better_scores + 1
 
     """ Methods for updating a score. """
-
-    async def increment_replay_views(self) -> None:
-        # TODO: move replay views to be per-score rather than per-user
-        assert self.player is not None
-
-        # TODO: apparently cached stats don't store replay views?
-        #       need to refactor that to be able to use stats_repo here
-        await app.state.services.database.execute(
-            f"UPDATE stats "
-            "SET replay_views = replay_views + 1 "
-            "WHERE id = :user_id AND mode = :mode",
-            {"user_id": self.player.id, "mode": self.mode},
-        )

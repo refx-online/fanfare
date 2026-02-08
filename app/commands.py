@@ -959,6 +959,25 @@ async def unrestrict(ctx: Context) -> str | None:
 
 
 @command(Privileges.ADMINISTRATOR, hidden=True)
+async def wipe(ctx: Context) -> str | None:
+    """Wipe player's scores. every mode"""
+    args_len = len(ctx.args)
+    if args_len < 2:
+        return "Invalid syntax: !wipe (player) <reason>"
+
+    player_name = ctx.args[0]
+    reason = " ".join(ctx.args[1:])
+
+    player = await app.state.sessions.players.from_cache_or_sql(name=player_name)
+    if not player:
+        return "Could not find user."
+
+    await player.wipe(admin=ctx.player, reason=reason)
+
+    return f"{player.name}'s scores wiped."
+
+
+@command(Privileges.ADMINISTRATOR, hidden=True)
 async def alert(ctx: Context) -> str | None:
     """Send a notification to all players."""
     if len(ctx.args) < 1:

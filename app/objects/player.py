@@ -460,6 +460,51 @@ class Player:
             # to update their client-side privileges
             self.enqueue(app.packets.bancho_privileges(self.bancho_priv))
 
+    async def wipe(self, admin: Player, reason: str) -> None:
+        """Wipe `self` for `reason`, and log to sql."""
+        await logs_repo.create(
+            _from=admin.id,
+            to=self.id,
+            action="wipe",
+            msg=reason,
+        )
+
+        for mode in (0, 1, 2, 3, 4, 5, 6, 8, 12, 16, 20):
+            await app.state.services.redis.zrem(
+                f"bancho:leaderboard:{mode}",
+                self.id,
+            )
+            await app.state.services.redis.zrem(
+                f'bancho:leaderboard:{mode}:{self.geoloc["country"]["acronym"]}',
+                self.id,
+            )
+
+        # TODO: instead of doing this, how about i make a new table
+        #       and store the "wiped" score/stats in it.
+        await app.state.services.database.execute(
+            "UPDATE stats "
+            "SET tscore = 0, rscore = 0, pp = 0, plays = 0, playtime = 0, acc = 0.000, max_combo = 0, total_hits = 0, replay_views = 0, xh_count = 0, x_count = 0, sh_count = 0, s_count = 0, a_count = 0, xp = 0 "
+            "WHERE id = :user_id",
+            {"user_id": self.id},
+        )
+
+        await app.state.services.database.execute(
+            "DELETE FROM scores WHERE userid = :user_id",
+            {"user_id": self.id},
+        )
+
+        log_msg = f"{admin} wipes {self} for: {reason}."
+
+        log(log_msg, Ansi.LRED)
+
+        webhook_url = app.settings.DISCORD_AUDIT_LOG_WEBHOOK
+        if webhook_url:
+            webhook = Webhook(webhook_url, content=log_msg)
+            asyncio.create_task(webhook.post())  # type: ignore[unused-awaitable]
+
+        if self.is_online:
+            self.logout()
+
     async def restrict(self, admin: Player, reason: str) -> None:
         """Restrict `self` for `reason`, and log to sql."""
         await self.remove_privs(Privileges.UNRESTRICTED)
@@ -471,7 +516,7 @@ class Player:
             msg=reason,
         )
 
-        for mode in (0, 1, 2, 3, 4, 5, 6, 8):
+        for mode in (0, 1, 2, 3, 4, 5, 6, 8, 12, 16, 20):
             await app.state.services.redis.zrem(
                 f"bancho:leaderboard:{mode}",
                 self.id,
@@ -1032,6 +1077,9 @@ class Player:
         if self.refx:
             return info_text + " [refx]"
 
+        if self.aeris:
+            return info_text + " [aeris]"
+
         match self.status.mods:
             case mods if mods & Mods.RELAX:
                 info_text += " [RX]"
@@ -1041,9 +1089,6 @@ class Player:
                 info_text += " [TD]"
             case _:
                 info_text += " [VN]"
-
-        if self.aeris:
-            info_text += " [aeris]"
 
         return info_text
 

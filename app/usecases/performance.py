@@ -56,3 +56,68 @@ async def calculate_performances(
     # each calculation is independent of the others
     # and the performance gain is *GODLY*
     return await asyncio.gather(*[_(score) for score in scores])
+
+
+def calculate_accuracy(
+    mode_vn: int,
+    n300: int,
+    n100: int,
+    n50: int,
+    nmiss: int,
+    nkatu: int,
+    ngeki: int,
+    score_v2: bool,
+) -> float:
+    """Used for pp competition matches to calculate accuracy."""
+
+    if mode_vn == 0:  # osu!std
+        total = n300 + n100 + n50 + nmiss
+        if total == 0:
+            return 0.0
+        return (
+            100.0 * ((n300 * 300.0) + (n100 * 100.0) + (n50 * 50.0)) / (total * 300.0)
+        )
+
+    elif mode_vn == 1:  # osu!taiko
+        total = n300 + n100 + nmiss
+        if total == 0:
+            return 0.0
+        return 100.0 * ((n100 * 0.5) + n300) / total
+
+    elif mode_vn == 2:  # osu!catch
+        total = n300 + n100 + n50 + nkatu + nmiss
+        if total == 0:
+            return 0.0
+        return 100.0 * (n300 + n100 + n50) / total
+
+    elif mode_vn == 3:  # osu!mania
+        total = n300 + n100 + n50 + ngeki + nkatu + nmiss
+        if total == 0:
+            return 0.0
+
+        if score_v2:
+            return (
+                100.0
+                * (
+                    (n50 * 50.0)
+                    + (n100 * 100.0)
+                    + (nkatu * 200.0)
+                    + (n300 * 300.0)
+                    + (ngeki * 305.0)
+                )
+                / (total * 305.0)
+            )
+
+        return (
+            100.0
+            * (
+                (n50 * 50.0)
+                + (n100 * 100.0)
+                + (nkatu * 200.0)
+                + ((n300 + ngeki) * 300.0)
+            )
+            / (total * 300.0)
+        )
+
+    else:
+        raise ValueError(f"invalid vanilla mode {mode_vn}")
