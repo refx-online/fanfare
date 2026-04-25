@@ -257,6 +257,15 @@ async def fetch_bot_response(msg: str) -> str:
     sys = urllib.parse.quote("You are an annoying girlfriend. Keep it short.")
 
     url = f"https://text.pollinations.ai/{prompt}?system={sys}"
-    response = await http_client.get(url, headers={"User-Agent": "Mozilla/5.0"})
+    try:
+        response = await http_client.get(url, headers={"User-Agent": "Mozilla/5.0"})
+        if response.status_code == 200:
+            text = response.read().decode()
+            text = text.split("--- **Support Pollinations.AI:**")[0]
+            text = text.split("🌸 **Ad** 🌸")[0]
+            text = text.split("Powered by Pollinations.AI")[0]
+            return text.strip()
+    except Exception as e:
+        log(f"Failed to fetch AI response: {e}", Ansi.LRED)
 
-    return response.read().decode()
+    return ""
