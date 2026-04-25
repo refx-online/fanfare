@@ -209,6 +209,13 @@ class SendPrivateMessage(BasePacket):
                         player.last_np = None
 
                     player.send(resp_msg, sender=target)
+                else:
+                    # Not a command and not an np. Generate an AI response.
+                    from app.utils import fetch_bot_response
+
+                    ai_resp = await fetch_bot_response(msg)
+                    if ai_resp:
+                        player.send(ai_resp, sender=target)
 
         player.update_latest_activity_soon()
 

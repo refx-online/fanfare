@@ -924,4 +924,19 @@ async def handle_osu_login_request(
 
     player.update_latest_activity_soon()
 
+    from app.utils import fetch_bot_response
+
+    ai_greeting = await fetch_bot_response(
+        f"Greet {player.name} in a short, annoying girlfriend way when they connect.",
+    )
+    if ai_greeting:
+        player.enqueue(
+            app.packets.send_message(
+                sender=app.state.sessions.bot.name,
+                msg=ai_greeting,
+                recipient=player.name,
+                sender_id=app.state.sessions.bot.id,
+            ),
+        )
+
     return {"osu_token": player.token, "response_body": bytes(data)}
