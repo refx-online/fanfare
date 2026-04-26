@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import time
 from collections.abc import Mapping
@@ -39,6 +40,7 @@ from app.packets import LoginFailureReason
 from app.repositories import ingame_logins as logins_repo
 from app.repositories import mail as mail_repo
 from app.repositories import users as users_repo
+from app.utils import fetch_bot_response
 
 OSU_API_V2_CHANGELOG_URL = "https://osu.ppy.sh/api/v2/changelog"
 
@@ -923,5 +925,20 @@ async def handle_osu_login_request(
     )
 
     player.update_latest_activity_soon()
+
+    from app.utils import fetch_bot_response
+
+    ai_greeting = await fetch_bot_response(
+        f"Greet {player.name} in a short, annoying girlfriend way when they connect.",
+    )
+    if ai_greeting:
+        player.enqueue(
+            app.packets.send_message(
+                sender=app.state.sessions.bot.name,
+                msg=ai_greeting,
+                recipient=player.name,
+                sender_id=app.state.sessions.bot.id,
+            ),
+        )
 
     return {"osu_token": player.token, "response_body": bytes(data)}

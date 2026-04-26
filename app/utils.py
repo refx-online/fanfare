@@ -5,6 +5,7 @@ import inspect
 import os
 import socket
 import sys
+import urllib.parse
 from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -18,6 +19,7 @@ import pymysql
 import app.settings
 from app.logging import Ansi
 from app.logging import log
+from app.state.services import http_client
 
 if TYPE_CHECKING:
     from app.repositories.users import User
@@ -248,3 +250,22 @@ def has_png_headers_and_trailers(data_view: memoryview) -> bool:
         data_view[:8] == b"\x89PNG\r\n\x1a\n"
         and data_view[-8:] == b"\x49END\xae\x42\x60\x82"
     )
+
+
+async def fetch_bot_response(msg: str) -> str:
+    prompt = urllib.parse.quote(msg)
+    sys = urllib.parse.quote("You are an annoying girlfriend. Keep it short.")
+
+    url = f"https://text.pollinations.ai/{prompt}?system={sys}"
+    try:
+        response = await http_client.get(url, headers={"User-Agent": "Mozilla/5.0"})
+        if response.status_code == 200:
+            text = response.read().decode()
+            text = text.split("--- **Support Pollinations.AI:**")[0]
+            text = text.split("🌸 **Ad** 🌸")[0]
+            text = text.split("Powered by Pollinations.AI")[0]
+            return text.strip()
+    except Exception as e:
+        log(f"Failed to fetch AI response: {e}", Ansi.LRED)
+
+    return ""

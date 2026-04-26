@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import re
 import time
 from zoneinfo import ZoneInfo
@@ -24,6 +25,7 @@ from app.packets import BanchoPacketReader
 from app.packets import BasePacket
 from app.repositories import mail as mail_repo
 from app.usecases.performance import ScoreParams
+from app.utils import fetch_bot_response
 
 
 class SendPrivateMessage(BasePacket):
@@ -209,6 +211,11 @@ class SendPrivateMessage(BasePacket):
                         player.last_np = None
 
                     player.send(resp_msg, sender=target)
+                else:
+                    # Not a command and not an np. Generate an AI response.
+                    ai_resp = await fetch_bot_response(msg)
+                    if ai_resp:
+                        player.send(ai_resp, sender=target)
 
         player.update_latest_activity_soon()
 

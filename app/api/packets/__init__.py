@@ -57,7 +57,7 @@ for packet, handler in (
     (ClientPackets.USER_PRESENCE_REQUEST, UserPresenceRequest),
     (ClientPackets.USER_PRESENCE_REQUEST_ALL, UserPresenceRequestAll),
     (ClientPackets.TOGGLE_BLOCK_NON_FRIEND_DMS, ToggleBlockingDMs),
-    (ClientPackets.REFX_LB, IdentifyRefx),
+    (ClientPackets.REFX_LEADERBOARD, IdentifyRefx),
     (ClientPackets.IDENTIFY_AERIS, IdentifyAeris),
     (ClientPackets.SEND_PUBLIC_MESSAGE, SendMessage),
     (ClientPackets.SEND_PRIVATE_MESSAGE, SendPrivateMessage),
