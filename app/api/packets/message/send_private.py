@@ -213,12 +213,9 @@ class SendPrivateMessage(BasePacket):
                     player.send(resp_msg, sender=target)
                 else:
                     # Not a command and not an np. Generate an AI response.
-                    async def send_ai_resp() -> None:
-                        ai_resp = await fetch_bot_response(msg)
-                        if ai_resp:
-                            player.send(ai_resp, sender=target)
-
-                    asyncio.create_task(send_ai_resp())
+                    ai_resp = await fetch_bot_response(msg)
+                    if ai_resp:
+                        player.send(ai_resp, sender=target)
 
         player.update_latest_activity_soon()
 
